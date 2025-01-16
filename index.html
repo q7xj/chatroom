@@ -5,78 +5,190 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chatroom</title>
   <style>
+    /* General Styles */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+    }
+    #container {
+      width: 90%;
+      max-width: 600px;
+      height: 90%;
+      max-height: 800px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      opacity: 0;
+      animation: fadeIn 1s forwards;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Username Input Screen */
+    #usernameScreen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    #usernameScreen h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    #usernameInput {
+      padding: 10px;
+      font-size: 1rem;
+      width: 80%;
+      max-width: 300px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 5px;
+    }
+    #enterChatButton {
+      padding: 10px 20px;
+      font-size: 1rem;
+      background: #6a11cb;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    #enterChatButton:hover {
+      background: #2575fc;
+    }
+
+    /* Chat Screen */
+    #chatScreen {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      height: 100%;
     }
     #messages {
       flex: 1;
       overflow-y: auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    #messages div {
+      margin-bottom: 10px;
       padding: 10px;
-      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.2);
     }
     #input {
       display: flex;
       padding: 10px;
-      border-top: 1px solid #ccc;
+      background: rgba(0, 0, 0, 0.8);
     }
     #input input {
       flex: 1;
       padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      border: none;
+      border-radius: 5px;
+      margin-right: 10px;
     }
     #input button {
-      padding: 10px;
-      margin-left: 5px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background: #007bff;
-      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background: #6a11cb;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
     #input button:hover {
-      background: #0056b3;
+      background: #2575fc;
     }
   </style>
 </head>
 <body>
-  <div id="messages"></div>
-  <div id="input">
-    <input type="text" id="messageInput" placeholder="Type a message...">
-    <button id="sendButton">Send</button>
+  <div id="container">
+    <!-- Username Input Screen -->
+    <div id="usernameScreen">
+      <h1>Enter Your Username</h1>
+      <input type="text" id="usernameInput" placeholder="Your username" />
+      <button id="enterChatButton">Enter Chat</button>
+    </div>
+
+    <!-- Chat Screen -->
+    <div id="chatScreen">
+      <div id="messages"></div>
+      <div id="input">
+        <input type="text" id="messageInput" placeholder="Type a message..." />
+        <button id="sendButton">Send</button>
+      </div>
+    </div>
   </div>
 
   <script>
-    const serverUrl = 'https://round-snowflake-5144.afa-committee.workers.dev/';
+    const serverUrl = 'wss://your-worker-url'; // Replace with your WebSocket Worker URL
     const ws = new WebSocket(serverUrl);
 
+    const usernameScreen = document.getElementById('usernameScreen');
+    const usernameInput = document.getElementById('usernameInput');
+    const enterChatButton = document.getElementById('enterChatButton');
+    const chatScreen = document.getElementById('chatScreen');
     const messagesDiv = document.getElementById('messages');
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
 
+    let username = '';
+
+    // Username selection logic
+    enterChatButton.addEventListener('click', () => {
+      if (usernameInput.value.trim() !== '') {
+        username = usernameInput.value.trim();
+        usernameScreen.style.display = 'none';
+        chatScreen.style.display = 'flex';
+        messageInput.focus();
+      }
+    });
+
+    usernameInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        enterChatButton.click();
+      }
+    });
+
     // Display incoming messages
     ws.onmessage = (event) => {
+      const messageData = JSON.parse(event.data);
       const message = document.createElement('div');
-      message.textContent = event.data;
+      message.textContent = `${messageData.username}: ${messageData.message}`;
       messagesDiv.appendChild(message);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     };
 
     // Send a message
     sendButton.addEventListener('click', () => {
-      const message = messageInput.value;
+      const message = messageInput.value.trim();
       if (message) {
-        ws.send(message);
+        ws.send(JSON.stringify({ username, message }));
         messageInput.value = '';
       }
     });
 
-    // Allow pressing Enter to send
     messageInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         sendButton.click();
