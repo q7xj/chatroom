@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatroom</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+    #input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ccc;
+    }
+    #input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #input button {
+      padding: 10px;
+      margin-left: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #007bff;
+      color: #fff;
+      cursor: pointer;
+    }
+    #input button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="messages"></div>
+  <div id="input">
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button id="sendButton">Send</button>
+  </div>
+
+  <script>
+    const serverUrl = 'wss://chatroom-worker.example.workers.dev';
+    const
