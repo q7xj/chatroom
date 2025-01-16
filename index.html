@@ -53,4 +53,35 @@
 
   <script>
     const serverUrl = 'wss://chatroom-worker.example.workers.dev';
-    const
+    const ws = new WebSocket(serverUrl);
+
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+
+    // Display incoming messages
+    ws.onmessage = (event) => {
+      const message = document.createElement('div');
+      message.textContent = event.data;
+      messagesDiv.appendChild(message);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    };
+
+    // Send a message
+    sendButton.addEventListener('click', () => {
+      const message = messageInput.value;
+      if (message) {
+        ws.send(message);
+        messageInput.value = '';
+      }
+    });
+
+    // Allow pressing Enter to send
+    messageInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        sendButton.click();
+      }
+    });
+  </script>
+</body>
+</html>
