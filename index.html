@@ -3,84 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chatroom</title>
+  <title>GoSandy Chat</title>
   <style>
-    /* Add your styles here (same as before) */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+    #input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ccc;
+    }
+    #input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #input button {
+      padding: 10px;
+      margin-left: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #007bff;
+      color: #fff;
+      cursor: pointer;
+    }
+    #input button:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
-  <div id="container">
-    <!-- Username Input Screen -->
-    <div id="usernameScreen">
-      <h1>Enter Your Username</h1>
-      <input type="text" id="usernameInput" placeholder="Your username" />
-      <button id="enterChatButton">Enter Chat</button>
-    </div>
-
-    <!-- Chat Screen -->
-    <div id="chatScreen" style="display: none;">
-      <div id="messages"></div>
-      <div id="input">
-        <input type="text" id="messageInput" placeholder="Type a message..." />
-        <button id="sendButton">Send</button>
-      </div>
-    </div>
+  <div id="messages"></div>
+  <div id="input">
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button id="sendButton">Send</button>
   </div>
 
   <script>
-    // Replace with your WebSocket Worker URL
-    const serverUrl = 'wss://ws.postman-echo.com/raw';
+    const serverUrl = 'wss://ws.postman-echo.com/raw'; // Replace with your GoSandy WebSocket URL
     const ws = new WebSocket(serverUrl);
 
-    const usernameScreen = document.getElementById('usernameScreen');
-    const usernameInput = document.getElementById('usernameInput');
-    const enterChatButton = document.getElementById('enterChatButton');
-    const chatScreen = document.getElementById('chatScreen');
     const messagesDiv = document.getElementById('messages');
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
 
-    let username = '';
-
-    // Handle WebSocket errors
-    ws.onerror = () => {
-      alert('WebSocket connection failed. Please check your backend.');
-    };
-
-    // Enter the chat after setting username
-    enterChatButton.addEventListener('click', () => {
-      if (usernameInput.value.trim() !== '') {
-        username = usernameInput.value.trim();
-        usernameScreen.style.display = 'none';
-        chatScreen.style.display = 'flex';
-        messageInput.focus();
-      }
-    });
-
-    usernameInput.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        enterChatButton.click();
-      }
-    });
-
     // Display incoming messages
     ws.onmessage = (event) => {
-      const { username: sender, message } = JSON.parse(event.data);
       const messageDiv = document.createElement('div');
-      messageDiv.textContent = `${sender}: ${message}`;
+      messageDiv.textContent = event.data; // Assuming GoSandy sends plain text messages
       messagesDiv.appendChild(messageDiv);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    };
+
+    // Handle errors
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    ws.onopen = () => {
+      console.log('Connected to GoSandy WebSocket server');
     };
 
     // Send a message
     sendButton.addEventListener('click', () => {
       const message = messageInput.value.trim();
       if (message) {
-        ws.send(JSON.stringify({ username, message })); // Send username and message
-        messageInput.value = '';
+        ws.send(message); // Send the message to GoSandy WebSocket server
+        messageInput.value = ''; // Clear input field
       }
     });
 
+    // Allow pressing Enter to send
     messageInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         sendButton.click();
